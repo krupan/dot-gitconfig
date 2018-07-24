@@ -1,0 +1,147 @@
+# -*- conf -*-
+[user]
+	name = Bryan Murdock
+[core]
+        pager = less -+$LESS -RFX
+
+[difftool "kdiff3"]
+    path = /usr/bin/kdiff3
+    trustExitCode = false
+[difftool]
+    prompt = false
+[diff]
+    tool = kdiff3
+    renames = copy
+[mergetool "kdiff3"]
+    path = /usr/bin/kdiff3
+    trustExitCode = false
+[mergetool]
+    keepBackup = false
+[merge]
+    tool = kdiff3
+
+# makes git fetch -p the default, which I like
+[remote "origin"]
+	prune = true
+
+[alias]
+  # if you are used to hg (or even svn) these will help:
+  co = checkout
+  up = checkout
+  ci = commit
+  st = status
+  # create a tracking branch
+  tracking-branch = "!f() { git checkout --track -b $1 origin/$1; }; f"
+
+  root = rev-parse --show-toplevel
+
+  # there's probably way to make this as concise as hg id, but I don't
+  # mind the extra info
+  id = show HEAD
+
+  # this is actually the same as 'hg purge --all .'
+  purge = clean -xfd
+
+  # WARNING: unlike mercurial, git will happily amend public commits
+  # without warning, which is a little scary.  The original (pre
+  # amend) commit is still there just not visible with hg log anymore.
+  # ALSO NOTE: only amends the tip commit, you can't update to an
+  # older one and amend like mercurial can.  Use git rebase -i (like
+  # hg histedit) for that.
+  #
+  # NOTE: you need to give it -a to have it amend everything, else
+  # give it a file or files.
+  #
+  # ALSO NOTE: It will pop up your editor to edit the
+  # commit message by default (like -e with hg amend).  To *not* do
+  # this (like plain hg amend) you pass it --no-edit.
+  #
+  # I'm seriously thinking about writing my own scripts for each of
+  # these since alias doesn't allow you to easily deal with opposing
+  # defaults and command-line switches like that.  I guess it's good
+  # for there to be some little differences between git and hg so I
+  # don't forget which one I'm using :-)
+  amend = commit --amend
+
+  # WARNING: again, unlike mercurial, git will happily strip public
+  # commits without warning.  It won't actually disappear right away,
+  # it just won't be visible with hg log anymore.  You can get it
+  # back.
+  #
+  # NOTE: This will strip commit you are currently on (HEAD).  This
+  # can't strip a whole string of commits like mercurial strip can.
+                      # If you want to do that just use `git branch -f <branch-name>`.  If
+  # that doesn't make sense, just strip one at a time.
+  strip = reset --hard HEAD^
+
+  # like the above this kills the current commit.  Unlike the above it
+  # puts the changes from the commit back into your working directory.
+  # I tried passing it filenames to just uncommit a single file
+  # (stackoverflow said I could), but it didn't work.
+  uncommit = reset HEAD^
+
+  # like the above, but puts the changes into the index (aka, staging
+  # area):
+  uncommit-soft = reset --soft HEAD^
+
+  # you give it a revision like SHA^, and the ^ is important,
+  # apparently.  Also, it seems backwards from histedit, from what I
+  # remember, if you mark a commit squash (would be fold in hg) it
+  # will be folded with the commit *above* it in the rebase
+  # --interactive text buffer.
+  histedit = rebase -i
+
+  # This looks a lot like hg log --graph.  You can add --all to see
+  # *everything* (including remote tracking branches), which is
+  # technically more hg like, but until you add a local branch to
+  # "track" the remote tracking branches you might as well treat
+  # remote tracking branches as if they are *not* in your local repo.
+  # Hence, I only use --branches here and not --all. UPDATE: I want
+  # --all now.
+  glog = log --graph --decorate --branches --all
+
+  # you probably want to git fetch before doing this
+  review = diff origin/master..HEAD
+
+  branches = branch -vva
+
+  # only works on commits, not working directory:
+  parents = show --pretty=raw
+
+  # Pretty close to hg outgoing and incoming with the -b <branchname>
+  # arguments (or maybe --bookmarks? I never used those much).  NOTE:
+  # you don't have to specify the branch, it just uses the branch you
+  # are on.  I guess these could be modified to take an argument, but
+  # git checkout <branchname> is pretty fast.
+  #
+  # NOTE: will fail if you haven't pushed the branch yet (see
+  # push-branch below)
+  #
+  # REVISIT: these fail if your branch has not been pushed.  In that
+  # case they should just show you the whole branch, but I haven't
+  # extended my script to do that yet.
+  out = "!f() { branch=$(git symbolic-ref --short HEAD); git fetch; git log origin/$branch..$branch; }; f"
+  in = "!f() { branch=$(git symbolic-ref --short HEAD); git fetch; git log $branch..origin/$branch; }; f"
+
+  # Super annoying that all this is required, but Linus likes a
+  # pull-only workflow, so the UI around pushing isn't very smooth.
+  # The last git push is because it seems like sometimes I would run
+  # the first push command and it would only push the branch (aka,
+  # pointer) and not my commits.
+  push-branch = "!f() { branch=$(git symbolic-ref --short HEAD); git push --set-upstream origin $branch; git push; }; f"
+
+  # m is for move, of course
+  rename-branch = branch -m
+
+  # it's too easy to type git branch <new-branch-name> but then not be
+  # "on" that branch, maybe this will help:
+  new-branch = checkout -b
+
+  # hg import/export, except for export you have to specify revisions
+  # git-like (git export HEAD^^..HEAD, for example), and for import
+  # you have to send the pacth in like this: git import < /tmp/patch.
+  # For import-no commit you just pass it the patch name: git
+  # import-no-commit /tmp/patch.  Gotta love the consistency!
+  export = format-patch --stdout
+  import = am
+  import-no-commit = apply
