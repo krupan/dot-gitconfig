@@ -142,6 +142,6 @@
   # you have to send the pacth in like this: git import < /tmp/patch.
   # For import-no commit you just pass it the patch name: git
   # import-no-commit /tmp/patch.  Gotta love the consistency!
-  export = format-patch --stdout
+  export = format-patch --stdout -1
   import = am
   import-no-commit = apply
