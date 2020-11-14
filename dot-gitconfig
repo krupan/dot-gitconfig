@@ -145,3 +145,5 @@
   export = format-patch --stdout -1
   import = am
   import-no-commit = apply
+[rerere]
+	enabled = true
