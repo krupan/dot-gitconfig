@@ -100,8 +100,8 @@
   # --all now.
   glog = log --graph --decorate --branches --all
 
-  # you probably want to git fetch before doing this
-  review = diff origin/master..HEAD
+  # you probably want to git pull --rebase before doing this
+  review = "!f() { branch=$(git symbolic-ref --short HEAD); git diff origin/$branch..HEAD; }; f"
 
   branches = branch -vva
 
